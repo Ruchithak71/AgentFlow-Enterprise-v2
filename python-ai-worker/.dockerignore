@@ -1,0 +1,14 @@
+# FIX C-9: Exclude Windows venv and cache directories from the Docker build context.
+# Without this, COPY . . would bundle the Windows-compiled venv into a Linux image,
+# causing build bloat and native-extension failures.
+
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.env
+*.egg-info/
+dist/
+.DS_Store

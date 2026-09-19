@@ -1,0 +1,8 @@
+# Python AI Worker — pinned dependency versions
+# Run: pip install -r requirements.txt
+pika==1.3.2
+redis==5.2.1
+tenacity==9.0.0
+google-genai==1.16.0
+openai==1.35.0
+psycopg2-binary==2.9.9

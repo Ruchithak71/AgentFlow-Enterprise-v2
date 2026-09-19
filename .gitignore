@@ -1,0 +1,25 @@
+# ---- Secrets — NEVER commit these ----
+.env
+*.key
+*.pem
+
+# ---- Python ----
+python-ai-worker/venv/
+python-ai-worker/.venv/
+python-ai-worker/__pycache__/
+python-ai-worker/.pytest_cache/
+python-ai-worker/*.pyc
+
+# ---- Java / Maven ----
+java-orchestrator/target/
+java-orchestrator/.mvn/repository/
+*.class
+
+# ---- IDE ----
+.idea/
+*.iml
+.vscode/
+*.DS_Store
+
+# ---- Docker ----
+*.log

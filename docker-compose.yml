@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: agentflow-postgres
+    environment:
+      POSTGRES_DB: agentflow_db
+      POSTGRES_USER: agentflow_user
+      POSTGRES_PASSWORD: agentflow_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # FIX A-6: Health check ensures Spring Boot waits for DB to be truly ready
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "agentflow_user", "-d", "agentflow_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # 2. RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: agentflow-rabbitmq
+    ports:
+      - "5672:5672"    # AMQP protocol
+      - "15672:15672"  # Management Dashboard
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    # FIX A-6: Health check prevents Spring Boot and Python worker from connecting
+    # before the broker is ready to accept connections
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # 3. Redis In-Memory Cache
+  redis:
+    image: redis:7-alpine
+    container_name: agentflow-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # 4. Spring Boot Orchestrator Engine
+  java-orchestrator:
+    build:
+      context: ./java-orchestrator
+      dockerfile: Dockerfile
+    container_name: agentflow-orchestrator
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agentflow_db
+      SPRING_DATASOURCE_USERNAME: agentflow_user
+      SPRING_DATASOURCE_PASSWORD: agentflow_password
+      SPRING_RABBITMQ_HOST: rabbitmq          # FIX C-4: matches docker service name
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    # FIX A-6: condition: service_healthy ensures dependencies are fully ready
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # 5. Python AI Worker Service
+  python-ai-worker:
+    build:
+      context: ./python-ai-worker
+      dockerfile: Dockerfile
+    container_name: agentflow-python-worker
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASS: guest
+      QUEUE_NAME: sap_ai_tasks_queue
+      # FIX C-2: Python worker now uses the same local Redis as Spring Boot
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_SSL: "false"
+      CACHE_TTL_SECONDS: "3600"
+      # Secrets — set these via .env file or CI/CD secrets manager
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
