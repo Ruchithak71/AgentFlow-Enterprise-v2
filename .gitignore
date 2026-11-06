@@ -3,6 +3,12 @@
 *.key
 *.pem
 
+# ---- Frontend Node & Build artifacts ----
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.log
+
 # ---- Python ----
 python-ai-worker/venv/
 python-ai-worker/.venv/
@@ -20,6 +26,3 @@ java-orchestrator/.mvn/repository/
 *.iml
 .vscode/
 *.DS_Store
-
-# ---- Docker ----
-*.log
