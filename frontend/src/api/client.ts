@@ -4,10 +4,18 @@ import { TaskEntity, CachedTaskResult, TaskPayload, ServiceHealth } from '../typ
 const API_BASE = '/api';
 
 export const api = {
-  // Submit a new task to Spring Boot Orchestrator
+  // Submit JSON task
   async submitTask(payload: TaskPayload): Promise<{ status: string; taskId: string; message: string }> {
     const response = await axios.post(`${API_BASE}/tasks`, payload, {
       headers: { 'Content-Type': 'application/json' },
+    });
+    return response.data;
+  },
+
+  // Submit Multipart Document (PDF/Image)
+  async uploadInvoiceDocument(formData: FormData): Promise<{ status: string; taskId: string; message: string; fileName?: string }> {
+    const response = await axios.post(`${API_BASE}/tasks/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   },
@@ -19,7 +27,7 @@ export const api = {
       return response.data;
     } catch (error: any) {
       if (error.response && error.response.status === 404) {
-        return null; // Still processing or not found yet
+        return null;
       }
       throw error;
     }

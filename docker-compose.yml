@@ -70,6 +70,8 @@ services:
       SPRING_RABBITMQ_PASSWORD: guest
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+    volumes:
+      - ./uploads:/app/uploads
     # FIX A-6: condition: service_healthy ensures dependencies are fully ready
     depends_on:
       postgres:
@@ -99,6 +101,8 @@ services:
       # Secrets — set these via .env file or CI/CD secrets manager
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
       rabbitmq:
         condition: service_healthy

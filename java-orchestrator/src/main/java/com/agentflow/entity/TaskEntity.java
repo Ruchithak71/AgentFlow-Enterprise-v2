@@ -5,13 +5,6 @@ import java.time.LocalDateTime;
 
 /**
  * JPA entity for persisting task records to PostgreSQL.
- *
- * FIX C-5: All fields now have explicit @Column annotations so that
- * Hibernate's naming strategy cannot silently alter column names between
- * schema migrations, regardless of spring.jpa.hibernate.naming.strategy setting.
- *
- * FIX C-6: ddl-auto is set to 'validate' in application.properties.
- * The actual table DDL lives in db/migration/V1__create_tasks_table.sql (Flyway).
  */
 @Entity
 @Table(name = "tasks")
@@ -26,6 +19,15 @@ public class TaskEntity {
 
     @Column(name = "raw_payload", columnDefinition = "TEXT")
     private String rawPayload;
+
+    @Column(name = "file_path", length = 500)
+    private String filePath;
+
+    @Column(name = "final_decision", length = 100)
+    private String finalDecision;
+
+    @Column(name = "risk_score")
+    private Double riskScore;
 
     @Column(name = "status", nullable = false, length = 50)
     private String status;
@@ -43,6 +45,15 @@ public class TaskEntity {
         this.createdAt  = LocalDateTime.now();
     }
 
+    public TaskEntity(String taskId, String taskType, String rawPayload, String filePath, String status) {
+        this.taskId     = taskId;
+        this.taskType   = taskType;
+        this.rawPayload = rawPayload;
+        this.filePath   = filePath;
+        this.status     = status;
+        this.createdAt  = LocalDateTime.now();
+    }
+
     public String getTaskId()                { return taskId; }
     public void setTaskId(String taskId)     { this.taskId = taskId; }
 
@@ -51,6 +62,15 @@ public class TaskEntity {
 
     public String getRawPayload()                  { return rawPayload; }
     public void setRawPayload(String rawPayload)   { this.rawPayload = rawPayload; }
+
+    public String getFilePath()                    { return filePath; }
+    public void setFilePath(String filePath)       { this.filePath = filePath; }
+
+    public String getFinalDecision()               { return finalDecision; }
+    public void setFinalDecision(String finalDecision) { this.finalDecision = finalDecision; }
+
+    public Double getRiskScore()                   { return riskScore; }
+    public void setRiskScore(Double riskScore)     { this.riskScore = riskScore; }
 
     public String getStatus()                { return status; }
     public void setStatus(String status)     { this.status = status; }
